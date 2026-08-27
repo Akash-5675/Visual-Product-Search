@@ -1,0 +1,12 @@
+[project]
+name = "vpse"
+version = "0.1.0"
+description = "Visual Product Search Engine with OOD-aware Retrieval"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
