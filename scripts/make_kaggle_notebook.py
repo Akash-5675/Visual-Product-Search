@@ -64,7 +64,16 @@ cells are at the bottom."""),
 from pathlib import Path
 
 hits = glob.glob('/kaggle/input/**/Ebay_train.txt', recursive=True)
-assert hits, 'SOP dataset not attached — use Add Data'
+if not hits:
+    # show what IS attached so the fix is obvious
+    roots = sorted(Path('/kaggle/input').glob('*')) if Path('/kaggle/input').exists() else []
+    print('Could not find Ebay_train.txt. Attached datasets:')
+    for r in roots:
+        print(' ', r.name)
+        for sub in sorted(r.rglob('*'))[:12]:
+            print('    ', sub.relative_to(r))
+    raise SystemExit('Attach the Stanford Online Products dataset via Add Data, '
+                     'or set DATA_ROOT manually to the folder holding Ebay_train.txt')
 DATA_ROOT = Path(hits[0]).parent
 print('data:', DATA_ROOT)
 
