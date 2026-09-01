@@ -54,6 +54,10 @@ notebooks/         # Kaggle-facing notebooks (thin wrappers around src/)
 pip install -r requirements.txt
 ```
 
+Training and the full baseline run on Kaggle GPU — open `notebooks/kaggle_baseline.ipynb`
+there, attach the SOP dataset, and set the accelerator to GPU. It auto-detects the dataset
+and `src/` paths. Locally the same code runs on CPU, roughly 7 images/sec.
+
 Dataset: [Stanford Online Products](https://www.kaggle.com/datasets/kwentar/stanford-online-products)
 (~120k images, 22,634 products, 12 categories). Place/extract under `data/Stanford_Online_Products/`
 so that `Ebay_train.txt` and `Ebay_test.txt` sit in that folder. The official split is built in:
@@ -61,8 +65,10 @@ train = class ids 1–11318, test = 11319–22634 (disjoint products).
 
 ## Plan / status
 
-- [ ] **Phase 0** — setup, data loading, verify split
+- [x] **Phase 0** — setup, data loading, verify split
+      (59,551 train / 60,502 test images; 11,318 vs 11,316 products; splits disjoint)
 - [ ] **Phase 1** — frozen ResNet50 baseline + FAISS retrieval loop + metrics
+      (pipeline verified end-to-end on a subset; full run pending on GPU)
 - [ ] **Phase 2** — metric learning: triplet → batch-hard → ArcFace (results table)
 - [ ] **Phase 3** — look-alike error analysis, harder mining, TTA, re-ranking
 - [ ] **Phase 4** — OOD refusal layer + precision/recall tradeoff curve
