@@ -16,12 +16,14 @@ query image → ResNet50 backbone → embedding head (L2-normed, d=512)
 
 | Model | Loss | Recall@1 | Recall@5 | Recall@10 | mAP |
 |---|---|---|---|---|---|
-| ResNet50 (frozen, no training) | — | — | — | — | — |
+| ResNet50 (frozen, no training) | — | **53.09** | 64.76 | 68.99 | 27.78 |
 | ResNet50 + head | Triplet (random negatives) | — | — | — | — |
 | ResNet50 + head | Triplet (batch-hard mining) | — | — | — | — |
 | ResNet50 + head | ArcFace | — | — | — | — |
 
-*(filled in as experiments complete — see `results/`)*
+Recall/mAP as percentages, SOP test split (60,502 images, 11,316 unseen products),
+leave-one-out protocol. Baseline measured on a Kaggle T4: 3m22s to embed, 1m36s to
+evaluate. *(remaining rows filled in as experiments complete)*
 
 ### OOD refusal
 
@@ -77,8 +79,8 @@ train = class ids 1–11318, test = 11319–22634 (disjoint products).
 
 - [x] **Phase 0** — setup, data loading, verify split
       (59,551 train / 60,502 test images; 11,318 vs 11,316 products; splits disjoint)
-- [ ] **Phase 1** — frozen ResNet50 baseline + FAISS retrieval loop + metrics
-      (pipeline verified end-to-end on a subset; full run pending on GPU)
+- [x] **Phase 1** — frozen ResNet50 baseline + FAISS retrieval loop + metrics
+      (R@1 53.09 / R@5 64.76 / R@10 68.99 / mAP@100 27.78)
 - [ ] **Phase 2** — metric learning: triplet → batch-hard → ArcFace (results table)
 - [ ] **Phase 3** — look-alike error analysis, harder mining, TTA, re-ranking
 - [ ] **Phase 4** — OOD refusal layer + precision/recall tradeoff curve
