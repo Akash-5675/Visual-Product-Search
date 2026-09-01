@@ -141,8 +141,16 @@ use the largest `batch_p * batch_k` that fits. Best checkpoint and metrics land
 in `/kaggle/working/results/`.
 
 Change `loss` to `triplet_random` → `triplet_hard` → `arcface` and rerun to
-build the comparison table."""),
-        code("""from vpse.config import Config
+build the comparison table.
+
+Training takes hours, so use *Save Version → Save & Run All* rather than an
+interactive session — that runs on Kaggle's servers and survives closing the
+browser. Set `RUN_TRAINING = True` below before doing so."""),
+        code("""# Guard: keeps "Run All" / "Save & Run All" from starting a multi-hour
+# training job. Flip to True when you actually want to train.
+RUN_TRAINING = False
+
+from vpse.config import Config
 from vpse.train import main as train_main
 
 cfg = Config(
@@ -154,7 +162,11 @@ cfg = Config(
     num_workers=4,
     device=DEVICE,
 )
-train_main(cfg)"""),
+
+if RUN_TRAINING:
+    train_main(cfg)
+else:
+    print('Training skipped (RUN_TRAINING = False). Set it to True to train.')"""),
         md("""## Save your numbers
 
 Download `baseline.json`, `results/*.json`, and `baseline_grid.png` from the
