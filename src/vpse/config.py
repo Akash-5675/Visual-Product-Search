@@ -32,6 +32,8 @@ class Config:
 
     # retrieval / eval
     recall_ks: tuple = (1, 5, 10)
+    # a full eval re-embeds the whole test split; don't do it every epoch
+    eval_every: int = 3
 
     device: str = "cuda"
 

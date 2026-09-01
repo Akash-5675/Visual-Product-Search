@@ -54,9 +54,19 @@ notebooks/         # Kaggle-facing notebooks (thin wrappers around src/)
 pip install -r requirements.txt
 ```
 
-Training and the full baseline run on Kaggle GPU — open `notebooks/kaggle_baseline.ipynb`
-there, attach the SOP dataset, and set the accelerator to GPU. It auto-detects the dataset
-and `src/` paths. Locally the same code runs on CPU, roughly 7 images/sec.
+### Running on Kaggle GPU
+
+`notebooks/kaggle_selfcontained.ipynb` embeds the whole `vpse` package, so it needs no
+clone and no uploaded source. On Kaggle: *File → Upload Notebook*, *Add Data* → Stanford
+Online Products, *Settings → Accelerator* → GPU, then Run All. Baseline takes ~10 min.
+
+Regenerate it after editing anything under `src/vpse/`:
+
+```bash
+python scripts/make_kaggle_notebook.py
+```
+
+Locally the same code runs on CPU at roughly 7 images/sec (~2.5 h for the test split).
 
 Dataset: [Stanford Online Products](https://www.kaggle.com/datasets/kwentar/stanford-online-products)
 (~120k images, 22,634 products, 12 categories). Place/extract under `data/Stanford_Online_Products/`

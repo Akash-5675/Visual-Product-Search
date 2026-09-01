@@ -71,6 +71,10 @@ def main(cfg: Config):
                       f"loss {running / (step + 1):.4f}")
         sched.step()
 
+        is_last = epoch == cfg.epochs - 1
+        if not (is_last or (epoch + 1) % cfg.eval_every == 0):
+            continue
+
         embs, labels = embed_dataset(model, test_ds, device,
                                      num_workers=cfg.num_workers)
         metrics = evaluate(embs, labels, cfg.recall_ks)
