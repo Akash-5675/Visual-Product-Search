@@ -23,7 +23,7 @@ query image → ResNet50 backbone → embedding head (L2-normed, d=512)
 
 Recall/mAP as percentages, SOP test split (60,502 images, 11,316 unseen products),
 leave-one-out protocol. Baseline measured on a Kaggle T4: 3m22s to embed, 1m36s to
-evaluate. *(remaining rows filled in as experiments complete)*
+evaluate (that search now runs on GPU when one is present). *(remaining rows filled in as experiments complete)*
 
 ### OOD refusal
 

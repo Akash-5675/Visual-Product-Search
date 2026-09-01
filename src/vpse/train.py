@@ -77,7 +77,7 @@ def main(cfg: Config):
 
         embs, labels = embed_dataset(model, test_ds, device,
                                      num_workers=cfg.num_workers)
-        metrics = evaluate(embs, labels, cfg.recall_ks)
+        metrics = evaluate(embs, labels, cfg.recall_ks, device=device)
         print(f"epoch {epoch}: {metrics}")
         if metrics["R@1"] > best_r1:
             best_r1 = metrics["R@1"]

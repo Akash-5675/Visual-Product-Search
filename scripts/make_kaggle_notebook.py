@@ -146,9 +146,9 @@ build the comparison table.
 Training takes hours, so use *Save Version → Save & Run All* rather than an
 interactive session — that runs on Kaggle's servers and survives closing the
 browser. Set `RUN_TRAINING = True` below before doing so."""),
-        code("""# Guard: keeps "Run All" / "Save & Run All" from starting a multi-hour
-# training job. Flip to True when you actually want to train.
-RUN_TRAINING = False
+        code("""# Guard against an accidental multi-hour run. Set False if you only want the
+# Phase 1 baseline above.
+RUN_TRAINING = True
 
 from vpse.config import Config
 from vpse.train import main as train_main
@@ -156,7 +156,7 @@ from vpse.train import main as train_main
 cfg = Config(
     data_root=DATA_ROOT,
     results_dir=Path('/kaggle/working/results'),
-    loss='triplet_hard',     # triplet_random | triplet_hard | arcface
+    loss='triplet_random',   # run order: triplet_random -> triplet_hard -> arcface
     epochs=15,
     batch_p=32, batch_k=4,   # 128 images per batch
     num_workers=4,
