@@ -156,7 +156,7 @@ from vpse.train import main as train_main
 cfg = Config(
     data_root=DATA_ROOT,
     results_dir=Path('/kaggle/working/results'),
-    loss='triplet_hard',     # run order: triplet_random -> triplet_hard -> arcface
+    loss='arcface',          # run order: triplet_random -> triplet_hard -> arcface
     epochs=15,
     batch_p=32, batch_k=4,   # 128 images per batch
     num_workers=4,
