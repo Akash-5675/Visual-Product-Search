@@ -16,8 +16,8 @@ query image → ResNet50 backbone → embedding head (L2-normed, d=512)
 
 | Model | Loss | Recall@1 | Recall@5 | Recall@10 | mAP |
 |---|---|---|---|---|---|
-| ResNet50 (frozen, no training) | — | **53.09** | 64.76 | 68.99 | 27.78 |
-| ResNet50 + head | Triplet (random negatives) | — | — | — | — |
+| ResNet50 (frozen, no training) | — | 53.09 | 64.76 | 68.99 | 27.78 |
+| ResNet50 + head | Triplet (random negatives) | **59.54** | 73.30 | 78.21 | 36.60 |
 | ResNet50 + head | Triplet (batch-hard mining) | — | — | — | — |
 | ResNet50 + head | ArcFace | — | — | — | — |
 
