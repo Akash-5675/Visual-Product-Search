@@ -51,6 +51,9 @@ class SOPDataset(Dataset):
         self.df = load_split(data_root, split)
         self.transform = transform
         self.labels = self.df["label"].to_numpy()
+        # category (12 of them) -- used by Phase 3 to separate look-alike
+        # errors (right category, wrong product) from off-target ones
+        self.super_labels = self.df["super_class_id"].to_numpy()
 
     def __len__(self):
         return len(self.df)

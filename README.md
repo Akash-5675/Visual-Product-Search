@@ -50,10 +50,15 @@ src/vpse/
   retrieval/index.py   # FAISS index build / query
   retrieval/eval.py    # Recall@k, mAP
   ood/gate.py          # distance-based refusal threshold + operating curve
+  retrieval/tta.py     # test-time augmentation (multi-view embedding average)
+  retrieval/rerank.py  # alpha-weighted query expansion
+  analysis/errors.py   # look-alike vs off-target error breakdown
+  analysis/grids.py    # query -> top-k result figures
   train.py             # training loop (works locally or on Kaggle)
 scripts/
-  run_baseline.py  # Phase 1: frozen backbone → index → metrics → result grid
-  embed_gallery.py # embed a split and cache embeddings to disk
+  run_baseline.py           # Phase 1: frozen backbone → index → metrics → grid
+  make_kaggle_notebook.py   # regenerate the phases 0-2 Kaggle notebook
+  make_phase3_notebook.py   # regenerate the Phase 3 Kaggle notebook
 notebooks/         # Kaggle-facing notebooks (thin wrappers around src/)
 ```
 
