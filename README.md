@@ -19,11 +19,18 @@ query image → ResNet50 backbone → embedding head (L2-normed, d=512)
 | ResNet50 (frozen, no training) | — | 53.09 | 64.76 | 68.99 | 27.78 |
 | ResNet50 + head | Triplet (random negatives) | 59.54 | 73.30 | 78.21 | 36.60 |
 | ResNet50 + head | Triplet (batch-hard mining) | **72.77** | 84.14 | 87.56 | 50.88 |
-| ResNet50 + head | ArcFace | — | — | — | — |
+| ResNet50 + head | ArcFace (untuned) | 70.37 | 81.51 | 85.04 | 46.83 |
 
 Recall/mAP as percentages, SOP test split (60,502 images, 11,316 unseen products),
 leave-one-out protocol. Baseline measured on a Kaggle T4: 3m22s to embed, 1m36s to
-evaluate (that search now runs on GPU when one is present). *(remaining rows filled in as experiments complete)*
+evaluate (that search now runs on GPU when one is present). Each training run:
+15 epochs, PK batches of 32x4, ~90 min on a T4.
+
+**Batch-hard mining wins.** It gains more at R@1 (+13.2 over random negatives) than at
+R@10 (+9.5), which is the signature of fixing confidently-wrong look-alikes rather than
+merely reshuffling the tail. ArcFace is normally competitive or better, but was run at
+the same 15-epoch budget with default scale/margin and no tuning — treat its row as a
+lower bound, not a verdict on the method.
 
 ### OOD refusal
 
@@ -81,7 +88,8 @@ train = class ids 1–11318, test = 11319–22634 (disjoint products).
       (59,551 train / 60,502 test images; 11,318 vs 11,316 products; splits disjoint)
 - [x] **Phase 1** — frozen ResNet50 baseline + FAISS retrieval loop + metrics
       (R@1 53.09 / R@5 64.76 / R@10 68.99 / mAP@100 27.78)
-- [ ] **Phase 2** — metric learning: triplet → batch-hard → ArcFace (results table)
+- [x] **Phase 2** — metric learning: triplet → batch-hard → ArcFace (results table)
+      (best: batch-hard triplet, R@1 72.77)
 - [ ] **Phase 3** — look-alike error analysis, harder mining, TTA, re-ranking
 - [ ] **Phase 4** — OOD refusal layer + precision/recall tradeoff curve
 - [ ] **Phase 5** — ONNX export, FastAPI endpoint, demo, README polish
