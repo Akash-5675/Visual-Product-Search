@@ -69,16 +69,21 @@ embs, labels = embed_dataset_tta(model, test_ds, DEVICE, views=VIEWS,
 print(embs.shape)"""
 
 BUNDLES = f"""import shutil
-from vpse.serve.bundle import build_bundle, subset_by_products
+from vpse.serve.bundle import build_bundle, degenerate_images, subset_by_products
 from vpse.serve.engine import SearchEngine
 
 GATE = {json.dumps(GATE)}   # Phase 4 result: calibrated on held-out categories @ 5% budget
 
+# catalog hygiene: SOP contains at least one all-black listing photo, which a
+# blank query matches at similarity 1.0. Drop near-blank images from the gallery.
+drop = degenerate_images(test_ds.df, DATA_ROOT)
+print(f'dropping {{len(drop)}} degenerate catalog images:', [test_ds.df.path[i] for i in drop][:5])
+
 full = build_bundle('/kaggle/working/bundle_full', ONNX, embs, test_ds.df, DATA_ROOT,
-                    GATE, thumbs=False)
+                    GATE, thumbs=False, drop_idx=drop)
 keep = subset_by_products(test_ds.df, max_products=2000)
 demo = build_bundle('/kaggle/working/bundle_demo', ONNX, embs, test_ds.df, DATA_ROOT,
-                    GATE, keep_idx=keep, thumbs=True)
+                    GATE, keep_idx=keep, thumbs=True, drop_idx=drop)
 print(f'full bundle: {{len(embs):,}} images;  demo bundle: {{len(keep):,}} images / 2,000 products')
 
 # end-to-end check through the engine (onnxruntime, numpy -- no torch)
@@ -88,6 +93,9 @@ q = Image.open(DATA_ROOT / test_ds.df.path[keep[0]])
 out = eng.search(q, k=5)
 assert out['results'][0]['gallery_index'] == 0, 'query image should retrieve itself first'
 print('self-retrieval OK; match =', out['match'], 'confidence =', round(out['confidence'], 3))
+blank = eng.search(Image.new('RGB', (256, 256), (0, 0, 0)))
+assert not blank['match'] and blank['refusal_reason'] == 'blank_image'
+print('solid-black query refused:', blank['refusal_reason'], '| nearest sim now', round(blank['confidence'], 3))
 
 for name in ('bundle_full', 'bundle_demo'):
     z = shutil.make_archive(f'/kaggle/working/{{name}}', 'zip', f'/kaggle/working/{{name}}')

@@ -27,6 +27,9 @@ def search(img: Image.Image, k: int):
     if out["match"]:
         status = (f"### Match &nbsp; <span style='color:#2a2'>●</span> "
                   f"confidence {conf:.3f} (threshold {thr:.3f})")
+    elif out.get("refusal_reason") == "blank_image":
+        status = ("### No match &nbsp; <span style='color:#c33'>●</span> "
+                  "the image is blank or a single flat colour — nothing to search for.")
     else:
         status = (f"### No match &nbsp; <span style='color:#c33'>●</span> "
                   f"nearest item only {conf:.3f} similar (threshold {thr:.3f}) — "

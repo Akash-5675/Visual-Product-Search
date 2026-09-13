@@ -18,11 +18,31 @@ import pandas as pd
 from PIL import Image
 
 
+def degenerate_images(df: pd.DataFrame, data_root: Path, min_std: float = 3.0) -> np.ndarray:
+    """Row indices of near-blank images (SOP has at least one all-black listing photo).
+
+    Left in the gallery they act as universal attractors for blank queries -- a
+    solid-black upload scored a perfect 1.000 against one -- so drop them.
+    """
+    bad = []
+    for i, rel in enumerate(df["path"]):
+        g = Image.open(Path(data_root) / rel).convert("L")
+        g.thumbnail((64, 64))
+        if float(np.asarray(g, dtype=np.float32).std()) < min_std:
+            bad.append(i)
+    return np.asarray(bad, dtype=np.int64)
+
+
 def build_bundle(out_dir: Path, onnx_path: Path, embeddings: np.ndarray,
                  df: pd.DataFrame, data_root: Path, gate: dict,
                  keep_idx: np.ndarray | None = None, thumbs: bool = False,
-                 thumb_size: int = 112, thumb_quality: int = 72) -> Path:
-    """df must have columns class_id, super_class_id, path (relative to data_root)."""
+                 thumb_size: int = 112, thumb_quality: int = 72,
+                 drop_idx: np.ndarray | None = None) -> Path:
+    """df must have columns class_id, super_class_id, path (relative to data_root).
+
+    drop_idx: rows to exclude (e.g. from degenerate_images). Computed once by the
+    caller so both the full and demo bundles share it.
+    """
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -31,6 +51,8 @@ def build_bundle(out_dir: Path, onnx_path: Path, embeddings: np.ndarray,
     if keep_idx is None:
         keep_idx = np.arange(len(df))
     keep_idx = np.asarray(keep_idx)
+    if drop_idx is not None and len(drop_idx):
+        keep_idx = keep_idx[~np.isin(keep_idx, drop_idx)]
     sub = df.iloc[keep_idx].reset_index(drop=True)
     embs = embeddings[keep_idx].astype("float16")
 

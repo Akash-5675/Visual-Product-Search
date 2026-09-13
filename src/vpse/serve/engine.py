@@ -9,6 +9,19 @@ from PIL import Image
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
+# A solid-colour or near-blank query has no content to match on, yet embeds close
+# to the plain-background component shared by many product photos (a solid white
+# query scores ~0.87 against the catalog). The similarity gate cannot reject it
+# because nothing about it is dissimilar. Refuse such inputs on pixel statistics
+# before embedding. Threshold in 0-255 grayscale units; real photos sit far above.
+MIN_PIXEL_STD = 5.0
+
+
+def pixel_std(img: Image.Image) -> float:
+    g = img.convert("L")
+    g.thumbnail((64, 64))
+    return float(np.asarray(g, dtype=np.float32).std())
+
 
 def preprocess(img: Image.Image, image_size: int = 224) -> np.ndarray:
     """Resize(256) -> CenterCrop(224) -> normalize, matching torchvision's
@@ -55,11 +68,13 @@ class SearchEngine:
         return acc / np.linalg.norm(acc)
 
     def search(self, img: Image.Image, k: int = 5) -> dict:
+        std = pixel_std(img)
+        blank = std < MIN_PIXEL_STD
         q = self.embed(img)
         sims = self.gallery @ q
         order = np.argsort(-sims)
         top1 = float(sims[order[0]])
-        accepted = top1 >= self.threshold
+        accepted = (top1 >= self.threshold) and not blank
 
         # top-k distinct products, best image for each
         results, seen = [], set()
@@ -78,8 +93,9 @@ class SearchEngine:
             })
             if len(results) == k:
                 break
-        return {"match": bool(accepted), "confidence": top1,
-                "threshold": self.threshold, "results": results}
+        reason = "blank_image" if blank else ("below_threshold" if not accepted else None)
+        return {"match": bool(accepted), "confidence": top1, "threshold": self.threshold,
+                "refusal_reason": reason, "results": results}
 
     def thumb_path(self, gallery_index: int) -> Path | None:
         p = self.dir / "thumbs" / f"{gallery_index}.jpg"

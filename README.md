@@ -133,6 +133,27 @@ python scripts/stage_space.py --bundle serve/bundle_demo --out space
 # then: cd space && git init && git remote add origin https://huggingface.co/spaces/<you>/<name> && git add . && git commit -m demo && git push
 ```
 
+### Known limitations — what the gate does *not* catch
+
+Probing the shipped engine with synthetic inputs turned up two things worth stating plainly.
+
+**Blank images were matched, not refused.** A solid-black upload scored a perfect
+1.000 — because SOP's catalog contains an all-black listing photo, and a solid-white
+upload scored 0.875 against ordinary products on white backgrounds. A similarity gate
+cannot reject a query that genuinely resembles something in the catalog. Two fixes,
+both shipped: near-blank images (pixel std < 3; there were 2 in 60,502) are dropped
+from the gallery at build time, and the engine refuses any query with pixel std < 5
+*before* embedding, with `refusal_reason: "blank_image"`. Real photos sit far above
+that (lowest seen: 12.8).
+
+**Pixel noise still passes.** Uniform random noise scores ~0.68, above the 0.590 gate,
+and lands on chairs. This is a general property of feature-similarity OOD detection —
+a CNN maps texture-like noise to a plausible "generic object" embedding — and the
+Phase 4 numbers were measured on real photographs (held-out products, ImageNet),
+which is what a product-search deployment actually receives. Rejecting adversarial
+or synthetic inputs would need a separate detector; it is out of scope here and the
+number is reported rather than hidden.
+
 ## Project layout
 
 ```
@@ -164,6 +185,7 @@ scripts/
   make_phase3_notebook.py   # regenerate the Phase 3 Kaggle notebook
   make_phase4_notebook.py   # regenerate the Phase 4 (OOD) Kaggle notebook
   make_phase5_notebook.py   # regenerate the Phase 5 export notebook
+  clean_bundle.py           # drop degenerate gallery images from an existing bundle
   stage_space.py            # assemble a HuggingFace Space folder from a demo bundle
 demo/app.py        # Gradio demo (HF Spaces-ready)
 notebooks/         # Kaggle-facing notebooks (thin wrappers around src/)
