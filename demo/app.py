@@ -57,12 +57,22 @@ def search(img: Image.Image, k: int):
     return status, gallery
 
 
+CATEGORIES = ["bicycle", "cabinet", "chair", "coffee_maker", "fan", "kettle",
+              "lamp", "mug", "sofa", "stapler", "table", "toaster"]
+EXAMPLES = [str(HERE / "examples" / f"{c}.jpg") for c in CATEGORIES]
+EXAMPLES = [e for e in EXAMPLES if Path(e).exists()]
+
 with gr.Blocks(title="Visual Product Search") as demo:
     gr.Markdown(
         "# Visual Product Search with OOD-aware refusal\n"
         "Upload a product photo. Returns the closest catalog products, or **No match** "
-        "when the query is out-of-catalog. Model: ResNet50 + batch-hard triplet, "
-        "hflip TTA, ONNX. Catalog: Stanford Online Products (unseen test products)."
+        "when the query is out-of-catalog.\n\n"
+        "**The catalog covers 12 categories only:** "
+        + ", ".join(c.replace("_", " ") for c in CATEGORIES) + ". "
+        "Photos of those kinds of products should match; anything else — a car, a shoe, "
+        "a phone — should be refused. Click an example below to try one.\n\n"
+        "<small>Model: ResNet50 + batch-hard triplet, hflip TTA, ONNX. Catalog: 2,000 "
+        "products from Stanford Online Products, none seen in training.</small>"
     )
     with gr.Row():
         with gr.Column(scale=1):
@@ -74,6 +84,14 @@ with gr.Blocks(title="Visual Product Search") as demo:
             gal = gr.Gallery(label="top matches", columns=5, height=260)
     btn.click(search, [inp, k], [status, gal])
     inp.change(search, [inp, k], [status, gal])
+    if EXAMPLES:
+        gr.Examples(
+            examples=[[e] for e in EXAMPLES],
+            inputs=inp,
+            label="What's in the catalog — click one to search",
+            example_labels=[Path(e).stem.replace("_", " ") for e in EXAMPLES],
+            examples_per_page=12,
+        )
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))

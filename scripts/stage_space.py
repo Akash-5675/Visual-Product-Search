@@ -29,6 +29,7 @@ def main():
     (out / "vpse" / "__init__.py").touch()
     (pkg / "__init__.py").touch()
     shutil.copy(ROOT / "src" / "vpse" / "serve" / "engine.py", pkg / "engine.py")
+    shutil.copytree(ROOT / "demo" / "examples", out / "examples")
     shutil.copytree(args.bundle, out / "bundle")
 
     size = sum(p.stat().st_size for p in out.rglob("*") if p.is_file()) / 2**20
