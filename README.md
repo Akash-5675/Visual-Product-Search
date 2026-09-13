@@ -1,5 +1,7 @@
 # Visual Product Search Engine with OOD-aware Retrieval
 
+**Live demo:** https://huggingface.co/spaces/AkashRamesh007/visual-product-search
+
 Image → top-k matching products from a catalog, or an explicit **"no match"** refusal when the
 query is out-of-catalog. Built on Stanford Online Products (SOP): trained on one set of product
 classes, evaluated on *unseen* products — retrieval, not classification.
@@ -118,11 +120,17 @@ curl -F file=@photo.jpg "localhost:8000/search?k=5"
 `match: false` means the nearest item fell below the gate; `results` still lists the
 closest products so a caller can show them as "similar, but not in our catalog".
 
-**Demo** (Gradio, HuggingFace-Spaces-ready)
+**Demo** — live at [AkashRamesh007/visual-product-search](https://huggingface.co/spaces/AkashRamesh007/visual-product-search)
+(Gradio on HuggingFace Spaces; 2,000-product catalog, CPU-only ONNX). Locally:
 
 ```bash
 VPSE_BUNDLE=serve/bundle_demo python demo/app.py
 ```
+
+Note for ZeroGPU Spaces: HuggingFace's free tier requires a `@spaces.GPU`-decorated
+function to exist even in a CPU-only app; `demo/app.py` carries a never-called
+placeholder for that reason. Thumbnails are sharded 1,000 per folder because the Hub
+caps a directory at 10,000 files.
 
 **Bundles.** `notebooks/kaggle_phase5_export.ipynb` turns the checkpoint into two
 zips: `bundle_full` (all 60,502 catalog images, for the API) and `bundle_demo`

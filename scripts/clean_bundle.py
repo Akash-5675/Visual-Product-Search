@@ -15,6 +15,7 @@ import pandas as pd
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from vpse.serve.bundle import degenerate_images  # noqa: E402
+from vpse.serve.engine import thumb_rel  # noqa: E402
 
 
 def main():
@@ -54,9 +55,13 @@ def main():
     if thumbs.is_dir():
         # thumbnails are named by row index; rebuild the numbering after the drop
         tmp = b / "thumbs_tmp"
-        tmp.mkdir()
         for new, old in enumerate(keep):
-            shutil.move(thumbs / f"{old}.jpg", tmp / f"{new}.jpg")
+            src = b / thumb_rel(old)
+            if not src.exists():
+                src = thumbs / f"{old}.jpg"          # pre-sharding layout
+            dst = tmp / Path(thumb_rel(new)).relative_to("thumbs")
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(src, dst)
         shutil.rmtree(thumbs)
         tmp.rename(thumbs)
     print(f"done: {len(keep):,} images remain")

@@ -67,12 +67,13 @@ def build_bundle(out_dir: Path, onnx_path: Path, embeddings: np.ndarray,
     (out_dir / "gate.json").write_text(json.dumps(gate, indent=2))
 
     if thumbs:
-        tdir = out_dir / "thumbs"
-        tdir.mkdir()
+        from vpse.serve.engine import thumb_rel
         for i, rel in enumerate(sub["path"]):
             img = Image.open(Path(data_root) / rel).convert("RGB")
             img.thumbnail((thumb_size, thumb_size))
-            img.save(tdir / f"{i}.jpg", quality=thumb_quality, optimize=True)
+            dst = out_dir / thumb_rel(i)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            img.save(dst, quality=thumb_quality, optimize=True)
     return out_dir
 
 

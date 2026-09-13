@@ -44,6 +44,12 @@ def preprocess(img: Image.Image, image_size: int = 224) -> np.ndarray:
     return x.transpose(2, 0, 1)[None]  # [1, 3, H, W]
 
 
+def thumb_rel(i: int) -> str:
+    """Thumbnails are sharded 1,000 per folder: hosts such as HuggingFace cap a
+    directory at 10,000 files, and a 2,000-product demo catalog exceeds that."""
+    return f"thumbs/{i // 1000:03d}/{i}.jpg"
+
+
 class SearchEngine:
     def __init__(self, bundle_dir: Path):
         import onnxruntime as ort
@@ -98,5 +104,8 @@ class SearchEngine:
                 "refusal_reason": reason, "results": results}
 
     def thumb_path(self, gallery_index: int) -> Path | None:
-        p = self.dir / "thumbs" / f"{gallery_index}.jpg"
-        return p if p.exists() else None
+        p = self.dir / thumb_rel(gallery_index)
+        if p.exists():
+            return p
+        flat = self.dir / "thumbs" / f"{gallery_index}.jpg"   # pre-sharding bundles
+        return flat if flat.exists() else None

@@ -17,6 +17,19 @@ from vpse.serve.engine import SearchEngine  # noqa: E402
 BUNDLE = Path(os.environ.get("VPSE_BUNDLE", HERE / "bundle"))
 engine = SearchEngine(BUNDLE)
 
+# HuggingFace's free tier runs Gradio Spaces on ZeroGPU, which refuses to start
+# unless some function is decorated with @spaces.GPU -- even though this app is
+# CPU-only ONNX and never touches a GPU. The placeholder satisfies the check and
+# is never called. Locally the `spaces` package is absent and this is skipped.
+try:
+    import spaces
+
+    @spaces.GPU
+    def _zerogpu_placeholder():
+        return None
+except ImportError:
+    pass
+
 
 def search(img: Image.Image, k: int):
     if img is None:
