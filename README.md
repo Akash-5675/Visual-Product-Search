@@ -6,11 +6,23 @@ classes, evaluated on *unseen* products — retrieval, not classification.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    Q[query image] --> P[preprocess<br/>resize 256 · crop 224]
+    P --> V1[view: identity]
+    P --> V2[view: hflip]
+    V1 --> M[ResNet50 + head<br/>ONNX, d=512]
+    V2 --> M
+    M --> A[average · L2-normalize]
+    A --> S[cosine search<br/>60,502 catalog embeddings]
+    S --> G{top-1 sim ≥ 0.590?}
+    G -- yes --> R[top-k products<br/>+ confidence]
+    G -- no --> N["no match"<br/>closest shown for reference]
 ```
-query image → ResNet50 backbone → embedding head (L2-normed, d=512)
-            → FAISS index over gallery embeddings → top-k
-            → OOD gate (distance threshold) → results OR "no match"
-```
+
+Training: batch-hard triplet loss over PK batches on the SOP train split (11,318
+products). Serving: the exported ONNX model, the test-split catalog (11,316 *unseen*
+products), and a refusal threshold calibrated on held-out categories.
 
 ## Results
 
@@ -83,6 +95,44 @@ non-product images, while wrongly refusing 4.95% of valid queries. The hard case
 honest one: a kettle we don't sell still looks like a kettle, and roughly 45% of those get
 answered with the nearest kettle we do sell. Non-product junk is much easier to reject.
 
+### Phase 5 — serving
+
+Everything below runs on **numpy + onnxruntime only** — no PyTorch at inference.
+ONNX output matches PyTorch to 8.8e-08; the numpy preprocessing is bit-exact against
+torchvision's. One query (two views + search over 60k) takes ~110 ms on CPU.
+
+**API**
+
+```bash
+VPSE_BUNDLE=serve/bundle_full uvicorn vpse.serve.api:app --port 8000
+curl -F file=@photo.jpg "localhost:8000/search?k=5"
+```
+
+```json
+{"match": true, "confidence": 0.934, "threshold": 0.590,
+ "results": [{"rank": 1, "similarity": 0.934, "product_id": 252035063072,
+              "category": "bicycle", "image": "bicycle_final/252035063072_0.JPG",
+              "gallery_index": 0}, ...]}
+```
+
+`match: false` means the nearest item fell below the gate; `results` still lists the
+closest products so a caller can show them as "similar, but not in our catalog".
+
+**Demo** (Gradio, HuggingFace-Spaces-ready)
+
+```bash
+VPSE_BUNDLE=serve/bundle_demo python demo/app.py
+```
+
+**Bundles.** `notebooks/kaggle_phase5_export.ipynb` turns the checkpoint into two
+zips: `bundle_full` (all 60,502 catalog images, for the API) and `bundle_demo`
+(2,000 products with thumbnails, for the Space). To publish the demo:
+
+```bash
+python scripts/stage_space.py --bundle serve/bundle_demo --out space
+# then: cd space && git init && git remote add origin https://huggingface.co/spaces/<you>/<name> && git add . && git commit -m demo && git push
+```
+
 ## Project layout
 
 ```
@@ -103,12 +153,19 @@ src/vpse/
   retrieval/rerank.py  # alpha-weighted query expansion
   analysis/errors.py   # look-alike vs off-target error breakdown
   analysis/grids.py    # query -> top-k result figures
+  serve/export.py      # ONNX export + torch/onnxruntime parity check
+  serve/bundle.py      # serving bundle: onnx + gallery + catalog + gate (+ thumbs)
+  serve/engine.py      # search engine over a bundle (numpy + onnxruntime, no torch)
+  serve/api.py         # FastAPI: POST /search -> top-k or "no match"
   train.py             # training loop (works locally or on Kaggle)
 scripts/
   run_baseline.py           # Phase 1: frozen backbone → index → metrics → grid
   make_kaggle_notebook.py   # regenerate the phases 0-2 Kaggle notebook
   make_phase3_notebook.py   # regenerate the Phase 3 Kaggle notebook
   make_phase4_notebook.py   # regenerate the Phase 4 (OOD) Kaggle notebook
+  make_phase5_notebook.py   # regenerate the Phase 5 export notebook
+  stage_space.py            # assemble a HuggingFace Space folder from a demo bundle
+demo/app.py        # Gradio demo (HF Spaces-ready)
 notebooks/         # Kaggle-facing notebooks (thin wrappers around src/)
 ```
 
@@ -149,4 +206,5 @@ train = class ids 1–11318, test = 11319–22634 (disjoint products).
       (hflip TTA: +1.0 R@1 → 73.91; query expansion no help; ~90% of look-alike failures remain)
 - [x] **Phase 4** — OOD refusal layer + precision/recall tradeoff curve
       (AUROC 0.928 hard / 0.963 easy; gate @ 0.590 refuses 55% / 78% at 5% false-refusal)
-- [ ] **Phase 5** — ONNX export, FastAPI endpoint, demo, README polish
+- [x] **Phase 5** — ONNX export, FastAPI endpoint, Gradio demo, README
+      (ONNX parity 8.8e-08; ~110 ms/query on CPU; demo verified live)

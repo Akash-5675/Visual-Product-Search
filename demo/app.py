@@ -1,0 +1,63 @@
+"""Gradio demo. Runs anywhere with a bundle next to it -- built for HuggingFace Spaces.
+
+    python demo/app.py                      # uses ./bundle or $VPSE_BUNDLE
+"""
+import os
+import sys
+from pathlib import Path
+
+import gradio as gr
+from PIL import Image
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent / "src"))       # repo layout
+sys.path.insert(0, str(HERE))                       # Spaces layout (vpse/ copied beside app.py)
+from vpse.serve.engine import SearchEngine  # noqa: E402
+
+BUNDLE = Path(os.environ.get("VPSE_BUNDLE", HERE / "bundle"))
+engine = SearchEngine(BUNDLE)
+
+
+def search(img: Image.Image, k: int):
+    if img is None:
+        return "Upload an image to search.", []
+    out = engine.search(img, k=int(k))
+    conf = out["confidence"]
+    thr = out["threshold"]
+    if out["match"]:
+        status = (f"### Match &nbsp; <span style='color:#2a2'>●</span> "
+                  f"confidence {conf:.3f} (threshold {thr:.3f})")
+    else:
+        status = (f"### No match &nbsp; <span style='color:#c33'>●</span> "
+                  f"nearest item only {conf:.3f} similar (threshold {thr:.3f}) — "
+                  f"this doesn't look like anything in the catalog. "
+                  f"Closest items shown for reference.")
+    gallery = []
+    for r in out["results"]:
+        p = engine.thumb_path(r["gallery_index"])
+        if p is None:
+            continue
+        gallery.append((str(p), f"#{r['rank']}  {r['category']}  ·  product {r['product_id']}  ·  {r['similarity']:.3f}"))
+    return status, gallery
+
+
+with gr.Blocks(title="Visual Product Search") as demo:
+    gr.Markdown(
+        "# Visual Product Search with OOD-aware refusal\n"
+        "Upload a product photo. Returns the closest catalog products, or **No match** "
+        "when the query is out-of-catalog. Model: ResNet50 + batch-hard triplet, "
+        "hflip TTA, ONNX. Catalog: Stanford Online Products (unseen test products)."
+    )
+    with gr.Row():
+        with gr.Column(scale=1):
+            inp = gr.Image(type="pil", label="query image")
+            k = gr.Slider(1, 10, value=5, step=1, label="results")
+            btn = gr.Button("Search", variant="primary")
+        with gr.Column(scale=2):
+            status = gr.Markdown()
+            gal = gr.Gallery(label="top matches", columns=5, height=260)
+    btn.click(search, [inp, k], [status, gal])
+    inp.change(search, [inp, k], [status, gal])
+
+if __name__ == "__main__":
+    demo.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))

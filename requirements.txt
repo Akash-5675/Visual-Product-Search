@@ -7,3 +7,9 @@ Pillow
 matplotlib
 tqdm
 scikit-learn
+fastapi
+uvicorn
+python-multipart
+onnx
+onnxruntime
+gradio
