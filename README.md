@@ -76,7 +76,10 @@ src/vpse/
   losses/arcface.py    # ArcFace head + loss
   retrieval/index.py   # FAISS index build / query
   retrieval/eval.py    # Recall@k, mAP
-  ood/gate.py          # distance-based refusal threshold + operating curve
+  ood/gate.py          # similarity score, refusal curve, AUROC, operating points
+  ood/protocol.py      # held-out-category OOD split
+  ood/data.py          # any folder of images as out-of-catalog queries
+  ood/plots.py         # score histograms + refusal operating curve figure
   retrieval/tta.py     # test-time augmentation (multi-view embedding average)
   retrieval/rerank.py  # alpha-weighted query expansion
   analysis/errors.py   # look-alike vs off-target error breakdown
@@ -86,6 +89,7 @@ scripts/
   run_baseline.py           # Phase 1: frozen backbone → index → metrics → grid
   make_kaggle_notebook.py   # regenerate the phases 0-2 Kaggle notebook
   make_phase3_notebook.py   # regenerate the Phase 3 Kaggle notebook
+  make_phase4_notebook.py   # regenerate the Phase 4 (OOD) Kaggle notebook
 notebooks/         # Kaggle-facing notebooks (thin wrappers around src/)
 ```
 
