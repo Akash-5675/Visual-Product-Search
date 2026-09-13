@@ -59,18 +59,37 @@ def search(img: Image.Image, k: int):
 
 CATEGORIES = ["bicycle", "cabinet", "chair", "coffee_maker", "fan", "kettle",
               "lamp", "mug", "sofa", "stapler", "table", "toaster"]
+# What each eBay category actually contains -- checked against the catalog images.
+# Visitors upload ceiling fans and ceiling lights otherwise, and those are not here.
+CATEGORY_NOTES = {
+    "bicycle":      "whole bikes: mountain, road, cruiser, BMX, folding",
+    "cabinet":      "wooden cabinets, hutches, curio / display cabinets, storage units",
+    "chair":        "armchairs, dining, office, folding chairs, recliners",
+    "coffee_maker": "drip coffee machines, percolators, carafes, espresso makers",
+    "fan":          "desk, pedestal, tower, box, USB and handheld fans — *not ceiling fans*",
+    "kettle":       "stovetop and electric kettles, teapots",
+    "lamp":         "table, desk and floor lamps, novelty lamps — *not ceiling lights*",
+    "mug":          "coffee mugs, travel mugs, cups",
+    "sofa":         "couches, loveseats, sectionals",
+    "stapler":      "desk staplers, staple guns, boxes of staples",
+    "table":        "coffee, side, end and dining tables, desks",
+    "toaster":      "pop-up toasters, toaster ovens, vintage toasters",
+}
 EXAMPLES = [str(HERE / "examples" / f"{c}.jpg") for c in CATEGORIES]
 EXAMPLES = [e for e in EXAMPLES if Path(e).exists()]
+
+_rows = "\n".join(f"| **{c.replace('_', ' ')}** | {CATEGORY_NOTES[c]} |" for c in CATEGORIES)
+CATALOG_TABLE = "| category | what's in it |\n|---|---|\n" + _rows
 
 with gr.Blocks(title="Visual Product Search") as demo:
     gr.Markdown(
         "# Visual Product Search with OOD-aware refusal\n"
         "Upload a product photo. Returns the closest catalog products, or **No match** "
         "when the query is out-of-catalog.\n\n"
-        "**The catalog covers 12 categories only:** "
-        + ", ".join(c.replace("_", " ") for c in CATEGORIES) + ". "
-        "Photos of those kinds of products should match; anything else — a car, a shoe, "
-        "a phone — should be refused. Click an example below to try one.\n\n"
+        "**The catalog is 12 eBay categories of household products — and only these.** "
+        "Anything else (a car, a shoe, a phone, a ceiling fan) should be refused. "
+        "Click an example below to try one.\n\n"
+        + CATALOG_TABLE + "\n\n"
         "<small>Model: ResNet50 + batch-hard triplet, hflip TTA, ONNX. Catalog: 2,000 "
         "products from Stanford Online Products, none seen in training.</small>"
     )
