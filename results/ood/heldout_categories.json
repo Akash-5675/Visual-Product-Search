@@ -1,0 +1,71 @@
+{
+  "protocol": "4 folds x 3 held-out categories; gallery = other 9; in-catalog scores leave-one-out",
+  "folds": [
+    {
+      "fold": 0,
+      "holdout": [
+        "bicycle",
+        "fan",
+        "sofa"
+      ],
+      "auroc_top1": 0.928,
+      "auroc_top3": 0.924
+    },
+    {
+      "fold": 1,
+      "holdout": [
+        "cabinet",
+        "kettle",
+        "stapler"
+      ],
+      "auroc_top1": 0.905,
+      "auroc_top3": 0.893
+    },
+    {
+      "fold": 2,
+      "holdout": [
+        "chair",
+        "lamp",
+        "table"
+      ],
+      "auroc_top1": 0.935,
+      "auroc_top3": 0.93
+    },
+    {
+      "fold": 3,
+      "holdout": [
+        "coffee_maker",
+        "mug",
+        "toaster"
+      ],
+      "auroc_top1": 0.942,
+      "auroc_top3": 0.939
+    }
+  ],
+  "pooled_auroc": {
+    "top1": 0.928,
+    "top3": 0.922
+  },
+  "operating_points_top1": [
+    {
+      "valid_refused_budget": 0.01,
+      "ood_refused": 0.22,
+      "threshold": 0.531
+    },
+    {
+      "valid_refused_budget": 0.02,
+      "ood_refused": 0.332,
+      "threshold": 0.552
+    },
+    {
+      "valid_refused_budget": 0.05,
+      "ood_refused": 0.551,
+      "threshold": 0.59
+    },
+    {
+      "valid_refused_budget": 0.1,
+      "ood_refused": 0.745,
+      "threshold": 0.627
+    }
+  ]
+}

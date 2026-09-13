@@ -1,0 +1,13 @@
+{
+  "score": "top1_cosine",
+  "views": [
+    "identity",
+    "hflip"
+  ],
+  "threshold": 0.5895918607711792,
+  "calibrated_on": "heldout_categories",
+  "valid_refused_budget": 0.05,
+  "expected_valid_refused": 0.04953555254371756,
+  "expected_ood_refused": 0.5506925390896169,
+  "foreign_refused_at_this_threshold": 0.775172062197298
+}

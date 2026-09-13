@@ -1,0 +1,31 @@
+{
+  "source": "ifigotin/imagenetmini-1000 val",
+  "n_ood": 3923,
+  "n_gallery": 60502,
+  "auroc": {
+    "top1": 0.963,
+    "top3": 0.962
+  },
+  "operating_points_top1": [
+    {
+      "valid_refused_budget": 0.01,
+      "ood_refused": 0.502,
+      "threshold": 0.537
+    },
+    {
+      "valid_refused_budget": 0.02,
+      "ood_refused": 0.621,
+      "threshold": 0.557
+    },
+    {
+      "valid_refused_budget": 0.05,
+      "ood_refused": 0.788,
+      "threshold": 0.593
+    },
+    {
+      "valid_refused_budget": 0.1,
+      "ood_refused": 0.896,
+      "threshold": 0.631
+    }
+  ]
+}

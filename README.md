@@ -59,10 +59,29 @@ it tightens correct clusters and reinforces wrong ones alike. The look-alike pro
 therefore mostly *not* fixable at test time; ~90% of those failures survive every cheap
 trick, which points at training (harder mining, higher resolution) rather than inference.
 
-### OOD refusal
+### Phase 4 — OOD refusal ("no match")
 
-Refusal operating curve (% garbage queries correctly refused vs. % valid queries wrongly
-refused) lives in `results/ood/` once Phase 4 runs.
+A retrieval system answers every query, including a photo of a dog. The gate scores each
+query by cosine similarity to its nearest catalog item (hflip-TTA embeddings, batch-hard
+model) and refuses below a threshold. Reported as a tradeoff, never a single number.
+
+Two out-of-catalog query sets, hard and easy:
+
+| Out-of-catalog set | AUROC | refused @ 1% | @ 2% | @ 5% | @ 10% |
+|---|---|---|---|---|---|
+| Held-out SOP categories (products we don't carry) | 0.928 | 22.0% | 33.2% | 55.1% | 74.5% |
+| ImageNet-mini val, 3,923 images (mostly not products) | 0.963 | 50.2% | 62.1% | 78.8% | 89.6% |
+
+Columns are the % of out-of-catalog queries correctly refused at a fixed budget of valid
+queries wrongly refused. Held-out is 4 folds × 3 categories, every category held out once
+(per-fold AUROC 0.905–0.942). Top-1 similarity beat a top-3 mean on every fold, so the
+gate uses top-1. Details in `results/ood/`.
+
+**Shipped gate:** threshold **0.590**, calibrated on the hard case at a 5% false-refusal
+budget. At that setting it refuses 55% of products the catalog doesn't carry and 78% of
+non-product images, while wrongly refusing 4.95% of valid queries. The hard case is the
+honest one: a kettle we don't sell still looks like a kettle, and roughly 45% of those get
+answered with the nearest kettle we do sell. Non-product junk is much easier to reject.
 
 ## Project layout
 
@@ -128,5 +147,6 @@ train = class ids 1–11318, test = 11319–22634 (disjoint products).
       (best: batch-hard triplet, R@1 72.77)
 - [x] **Phase 3** — look-alike error analysis, TTA, re-ranking
       (hflip TTA: +1.0 R@1 → 73.91; query expansion no help; ~90% of look-alike failures remain)
-- [ ] **Phase 4** — OOD refusal layer + precision/recall tradeoff curve
+- [x] **Phase 4** — OOD refusal layer + precision/recall tradeoff curve
+      (AUROC 0.928 hard / 0.963 easy; gate @ 0.590 refuses 55% / 78% at 5% false-refusal)
 - [ ] **Phase 5** — ONNX export, FastAPI endpoint, demo, README polish
